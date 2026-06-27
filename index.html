@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRA Freelance — Saisie mensuelle</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --ink:#1f2733; --muted:#7a869a;
+    --line:#e3e8f0; --accent:#3b6ef5; --accent-soft:#e8f0ff;
+    --abs:#fff3cd; --exc:#ede7ff; --weekend:#f0f2f6; --ferie:#fde2e2; --ferie-ink:#c0392b;
+    --ok:#1aa179; --warn:#b8860b; --err:#c0392b; --lock:#fdecea; --lock-ink:#a4392b; --shadow:0 6px 24px rgba(30,50,90,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);padding:24px;}
+  .wrap{max-width:1120px;margin:0 auto;}
+  header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  h1{font-size:20px;margin:0;font-weight:700;}
+  .logo-img{height:38px;width:auto;display:block;}
+  .logo-fallback{display:flex;align-items:center;gap:8px;font-size:22px;font-weight:700;line-height:1;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px;}
+  .card h3{margin:0 0 12px;font-size:14px;}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
+  .nav{display:flex;align-items:center;gap:10px;}
+  button{font-family:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);
+         border-radius:9px;padding:8px 14px;font-size:14px;transition:.15s;}
+  button:hover{border-color:var(--accent);color:var(--accent);}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  button.primary:hover{filter:brightness(1.05);color:#fff;}
+  button.ghost{background:transparent;}
+  button.sm{padding:5px 10px;font-size:12px;}
+  button:disabled{opacity:.45;cursor:not-allowed;border-color:var(--line);color:#fff;background:#9fb3e8;}
+  button.ghost:disabled{background:transparent;color:var(--muted);}
+  .month-title{font-size:18px;font-weight:700;min-width:170px;text-align:center;text-transform:capitalize;}
+  label.fld{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted);}
+  input,textarea,select{font-family:inherit;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:14px;color:var(--ink);background:#fff;}
+  input[type=text],input[type=email]{min-width:150px;}
+  input[type=number]{width:120px;}
+  input:disabled,select:disabled,textarea:disabled{background:#f4f6fb;}
+  textarea{width:100%;min-height:70px;resize:vertical;}
+  .missions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .mtag{display:flex;align-items:center;gap:8px;background:var(--accent-soft);border-radius:12px;padding:8px 8px 8px 12px;font-size:13px;}
+  .mtag .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;}
+  .mtag .mperiod{font-size:11px;color:var(--muted);}
+  .mtag button{border:none;background:transparent;padding:2px 6px;color:var(--muted);font-size:15px;}
+  .mtag button:hover{color:#c0392b;}
+  .hint{font-size:12px;color:var(--muted);margin-bottom:12px;background:var(--accent-soft);padding:8px 12px;border-radius:8px;}
+  .listhead,.dayrow{display:grid;grid-template-columns:160px 1fr 1fr 1fr;gap:12px;align-items:center;}
+  .listhead{padding:4px 10px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .dayrow{padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:#fff;}
+  .dayrow.weekend,.dayrow.ferie{background:var(--weekend);}
+  .dayrow.ferie{background:var(--ferie);}
+  .dayrow.ferie .dlabel{color:var(--ferie-ink);}
+  .dayrow.absent{background:var(--abs);}
+  .dlabel{font-weight:700;font-size:13px;text-transform:capitalize;}
+  .dlabel small{display:block;font-weight:500;color:var(--muted);font-size:11px;text-transform:none;}
+  .cellsel{width:100%;font-size:12px;padding:6px 8px;}
+  .cellsel.w{background:var(--accent-soft);border-color:var(--accent);}
+  .cellsel.a{background:var(--abs);border-color:#e0b400;}
+  .cellsel.x{background:var(--exc);border-color:#9b59b6;}
+  .cap{font-size:10px;color:var(--muted);margin-bottom:2px;display:block;text-transform:uppercase;letter-spacing:.03em;}
+  .totbar{display:flex;flex-wrap:wrap;gap:22px;align-items:center;}
+  .kpi{display:flex;flex-direction:column;}
+  .kpi .v{font-size:24px;font-weight:800;color:var(--accent);}
+  .kpi .v.eur{color:var(--ok);}
+  .kpi .l{font-size:12px;color:var(--muted);}
+  .bd{display:flex;flex-wrap:wrap;gap:8px;}
+  .bd .chip{font-size:12px;background:var(--accent-soft);border-radius:20px;padding:5px 12px;display:flex;gap:8px;align-items:center;}
+  .bd .chip.abs{background:var(--abs);}
+  .bd .chip.exc{background:var(--exc);}
+  .coherence{margin-top:14px;font-size:13px;font-weight:600;padding:10px 14px;border-radius:10px;}
+  .coherence.ok{background:#e7f6f0;color:var(--ok);}
+  .coherence.warn{background:#fff6e0;color:var(--warn);}
+  .coherence.err{background:var(--lock);color:var(--err);}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px;}
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .sw{width:12px;height:12px;border-radius:3px;display:inline-block;}
+  .valid{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4;
+         background:#fff8e6;border:1px solid #f0d68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;}
+  .valid input{margin-top:2px;width:18px;height:18px;flex:0 0 auto;cursor:pointer;}
+  .lockbanner{display:none;align-items:center;gap:14px;background:var(--lock);border:1px solid #f1b0a8;
+              color:var(--lock-ink);border-radius:10px;padding:14px 16px;font-size:14px;}
+  .histhead,.histrow{display:grid;grid-template-columns:1.6fr 1fr 1.2fr 1fr 1.4fr;gap:10px;align-items:center;font-size:13px;padding:8px 10px;}
+  .histhead{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .histrow{border:1px solid var(--line);border-radius:9px;margin-bottom:6px;}
+  .hactions{display:flex;gap:6px;justify-content:flex-end;}
+  .badge{font-size:10px;background:var(--accent);color:#fff;border-radius:10px;padding:2px 7px;margin-left:6px;}
+  .status{font-size:13px;margin-left:8px;}
+  .status.ok{color:var(--ok);} .status.err{color:var(--err);}
+  #printArea{display:none;}
+  @media print{ body *{visibility:hidden;} #printArea,#printArea *{visibility:visible;}
+    #printArea{display:block;position:absolute;left:0;top:0;width:100%;padding:24px;} @page{margin:14mm;} }
+  .pdoc h2{margin:0 0 2px;font-size:20px;}
+  .pdoc .pmeta{color:#333;font-size:12px;margin-bottom:14px;line-height:1.6;}
+  .ptable{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px;}
+  .ptable th,.ptable td{border:1px solid #ccc;padding:5px 8px;text-align:left;}
+  .ptable th{background:#eef2fb;}
+  .ptot{font-size:14px;font-weight:700;margin:8px 0;}
+  .psign{margin-top:30px;font-size:13px;display:flex;justify-content:space-between;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>📋 CRA Freelance — Saisie mensuelle</h1>
+    <div class="nav">
+      <button class="ghost" id="prev">‹</button>
+      <div class="month-title" id="monthTitle">—</div>
+      <button class="ghost" id="next">›</button>
+      <button class="ghost" id="today">Mois en cours</button>
+    </div>
+    <div class="brand">
+      <img src="logo-freelanzy.png" alt="Freelanzy" class="logo-img"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      <span class="logo-fallback" style="display:none">
+        <svg width="34" height="26" viewBox="0 0 34 26" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="9" cy="8" r="4.5" fill="#7b86ff"/><path d="M2.5 24 a6.5 6.5 0 0 1 13 0" fill="#3b6ef5"/>
+          <circle cx="24" cy="8" r="4.5" fill="#7b86ff"/><path d="M17.5 24 a6.5 6.5 0 0 1 13 0" fill="#3b6ef5"/>
+        </svg>
+        <span><span style="color:#7b86ff">free</span><span style="color:#2b3a8f;font-weight:800">lanzy</span></span>
+      </span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h3>En-tête du CRA</h3>
+    <div class="row">
+      <label class="fld">Prestataire<input type="text" id="pNom" placeholder="Nom Prénom"></label>
+      <label class="fld">SIRET (opt.)<input type="text" id="pSiret" placeholder="000 000 000 00000"></label>
+      <label class="fld">Email (opt.)<input type="email" id="pEmail" placeholder="email@exemple.fr"></label>
+      <label class="fld">TJM (€ HT)<input type="number" id="pTjm" min="0" step="10" placeholder="500"></label>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <label class="fld">Client destinataire<input type="text" id="cClient" placeholder="Société cliente"></label>
+      <label class="fld">N° CRA<input type="text" id="cNum"></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>Mes missions / clients</h3>
+    <div class="row">
+      <label class="fld">Client / mission<input type="text" id="mName" placeholder="ex. Client Alpha"></label>
+      <label class="fld">Début<input type="date" id="mStart"></label>
+      <label class="fld">Fin<input type="date" id="mEnd"></label>
+      <button id="addMission" class="primary" style="align-self:flex-end;">+ Ajouter</button>
+    </div>
+    <div class="missions" id="missionList" style="margin-top:14px;"></div>
+  </section>
+
+  <section class="card">
+    <div class="hint">✅ Jours ouvrés pré-remplis selon vos missions — modifiez seulement les exceptions. Les week-ends/fériés restent saisissables (astreinte, permanence, travail exceptionnel).</div>
+    <div class="listhead"><div>Jour</div><div>Matin</div><div>Après-midi</div><div>Journée entière</div></div>
+    <div id="list"></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--accent-soft);border:1px solid var(--accent)"></i> Travail</span>
+      <span><i class="sw" style="background:var(--abs);border:1px solid #e0b400"></i> Absence</span>
+      <span><i class="sw" style="background:var(--exc);border:1px solid #9b59b6"></i> Exceptionnel</span>
+      <span><i class="sw" style="background:var(--ferie)"></i> Férié</span>
+      <span>· Maladie = journée entière</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="totbar">
+      <div class="kpi"><span class="v" id="totDays">0</span><span class="l">jours facturables</span></div>
+      <div class="kpi"><span class="v" id="totExc" style="color:#9b59b6">0</span><span class="l">jours exceptionnels</span></div>
+      <div class="kpi"><span class="v" id="totAbs">0</span><span class="l">jours d'absence</span></div>
+      <div class="kpi"><span class="v eur" id="totMontant">—</span><span class="l">montant estimatif HT</span></div>
+      <div class="bd" id="breakdown"></div>
+    </div>
+    <div class="coherence" id="coherence"></div>
+  </section>
+
+  <section class="card">
+    <h3>Commentaire du mois (global)</h3>
+    <textarea id="globalComment" placeholder="Remarque générale sur le CRA du mois…" style="margin:0 0 16px;"></textarea>
+
+    <div class="lockbanner" id="lockBanner">
+      <span>🔒 <strong>CRA transmis au client</strong> le <span id="lockDate"></span> — en attente de sa validation. La facturation sera déclenchée après son accord.</span>
+      <button id="reopen">Reprendre / Rectifier</button>
+    </div>
+
+    <div id="actionsZone">
+      <label class="valid">
+        <input type="checkbox" id="validate">
+        <span><strong>Je certifie l'exactitude de ce CRA</strong> et le transmets au client pour validation.
+        La facturation sera déclenchée après son accord.</span>
+      </label>
+      <div class="row">
+        <button class="primary" id="pdf">📄 Générer le PDF</button>
+        <button class="primary" id="send" disabled>📤 Soumettre au client</button>
+        <button class="ghost" id="clear">Effacer le mois</button>
+        <span class="status" id="status"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>📚 Historique des CRA</h3>
+    <div class="histhead"><div>Mois</div><div>Statut</div><div>Activité</div><div>Montant HT</div><div></div></div>
+    <div id="histList"></div>
+  </section>
+
+</div>
+
+<div id="printArea"><div class="pdoc" id="pdoc"></div></div>
+
+<script>
+/* ====== CONFIG ====== */
+const MAKE_WEBHOOK_URL = "";
+const ABS_HALF=["Congé payé","Intercontrat","RTT","Formation","Sans solde","Autre"];
+const JOUR_ABS=["Congé payé","Maladie","Intercontrat","RTT","Formation","Sans solde","Autre"];
+const EXCEPT=["Astreinte","Permanence"];
+
+/* ====== ÉTAT ====== */
+let current=new Date(); current.setDate(1);
+let missions=JSON.parse(localStorage.getItem("cra_missions4")||"[]");
+if(missions.length===0){missions=[{name:"Mission principale",color:"#3b6ef5",start:"",end:""}];}
+let entries=JSON.parse(localStorage.getItem("cra_entries4")||"{}");
+let globalComments=JSON.parse(localStorage.getItem("cra_gcom4")||"{}");
+let profile=JSON.parse(localStorage.getItem("cra_profile")||"{}");
+let craMeta=JSON.parse(localStorage.getItem("cra_meta")||"{}");
+let feriesCache={}, curFeries={};
+const palette=["#3b6ef5","#1aa179","#e67e22","#9b59b6","#e74c3c","#16a085","#d35400","#2c3e50"];
+
+/* ====== UTILS ====== */
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const monthKey=()=>`${current.getFullYear()}-${pad(current.getMonth()+1)}`;
+const frDate=k=>{const[y,m,d]=k.split("-");return`${d}/${m}/${y}`;};
+const eur=n=>n.toLocaleString("fr-FR",{style:"currency",currency:"EUR",maximumFractionDigits:0});
+const num=n=>String(n).replace(".",",");
+const dow=key=>{const[y,m,d]=key.split("-").map(Number);return new Date(y,m-1,d).getDay();};
+function save(){localStorage.setItem("cra_missions4",JSON.stringify(missions));
+  localStorage.setItem("cra_entries4",JSON.stringify(entries));
+  localStorage.setItem("cra_gcom4",JSON.stringify(globalComments));
+  localStorage.setItem("cra_profile",JSON.stringify(profile));
+  localStorage.setItem("cra_meta",JSON.stringify(craMeta));}
+function meta(){const k=monthKey();if(!craMeta[k])craMeta[k]={client:"",num:"CRA-"+k,status:"brouillon",submittedAt:null};return craMeta[k];}
+function isLocked(){return meta().status==="soumis";}
+function missionActive(m,key){if(!m.start&&!m.end)return true;return(!m.start||key>=m.start)&&(!m.end||key<=m.end);}
+function selectableMissions(key){const a=missions.filter(m=>missionActive(m,key));return a.length?a:missions;}
+
+/* ====== EFFECTIF / DÉFAUT ====== */
+function isOffKey(key,feries){const w=dow(key);return w===0||w===6||!!(feries||curFeries)[key];}
+function defaultFor(key,feries){ if(isOffKey(key,feries))return {};   // week-end/férié : pas de pré-remplissage
+  const act=missions.filter(m=>missionActive(m,key)); if(act.length===1){const v={k:"w",v:act[0].name};return{jour:true,am:v,pm:v};} return {};}
+function effFor(key,feries){ return (key in entries)?entries[key]:defaultFor(key,feries); }
+function effectiveEntry(key){ return effFor(key,curFeries); }
+
+/* ====== FÉRIÉS ====== */
+async function getFeries(year){if(feriesCache[year])return feriesCache[year];
+  try{const r=await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`);feriesCache[year]=await r.json();}
+  catch(e){feriesCache[year]={};} return feriesCache[year];}
+
+/* ====== EN-TÊTE ====== */
+function bindHeader(){const set=(id,v)=>{document.getElementById(id).value=v||"";};
+  set("pNom",profile.nom);set("pSiret",profile.siret);set("pEmail",profile.email);set("pTjm",profile.tjm);
+  const mt=meta();set("cClient",mt.client);set("cNum",mt.num);
+  const lock=isLocked();
+  ["cClient","cNum","mName","mStart","mEnd","globalComment"].forEach(id=>document.getElementById(id).disabled=lock);
+  document.getElementById("addMission").disabled=lock;}
+[["pNom","nom"],["pSiret","siret"],["pEmail","email"],["pTjm","tjm"]].forEach(([id,key])=>{
+  document.getElementById(id).oninput=e=>{profile[key]=e.target.value;save();if(key==="tjm")computeTotals();renderHistory();};});
+document.getElementById("cClient").oninput=e=>{meta().client=e.target.value;save();};
+document.getElementById("cNum").oninput=e=>{meta().num=e.target.value;save();};
+
+/* ====== MISSIONS ====== */
+function renderMissions(){const wrap=document.getElementById("missionList");wrap.innerHTML="";const lock=isLocked();
+  missions.forEach((m,i)=>{const per=(m.start||m.end)?`${m.start?frDate(m.start):"…"} → ${m.end?frDate(m.end):"…"}`:"sans période";
+    const el=document.createElement("div");el.className="mtag";
+    el.innerHTML=`<span class="dot" style="background:${m.color}"></span><span><strong>${m.name}</strong><br><span class="mperiod">${per}</span></span>${lock?"":'<button>×</button>'}`;
+    if(!lock)el.querySelector("button").onclick=()=>{missions.splice(i,1);save();renderMissions();render();};
+    wrap.appendChild(el);});}
+document.getElementById("addMission").onclick=()=>{const n=document.getElementById("mName").value.trim();if(!n)return;
+  missions.push({name:n,color:palette[missions.length%palette.length],
+    start:document.getElementById("mStart").value,end:document.getElementById("mEnd").value});
+  document.getElementById("mName").value="";document.getElementById("mStart").value="";document.getElementById("mEnd").value="";
+  save();renderMissions();render();};
+
+/* ====== SÉLECTEUR ====== */
+function buildSelect(key,slot){const e=effectiveEntry(key);const lock=isLocked();
+  const s=document.createElement("select");s.className="cellsel";
+  const opt=(val,txt)=>{const o=document.createElement("option");o.value=val;o.textContent=txt;return o;};
+  s.appendChild(opt("","—"));
+  const og1=document.createElement("optgroup");og1.label="Missions";
+  selectableMissions(key).forEach(m=>og1.appendChild(opt("w:"+m.name,m.name)));s.appendChild(og1);
+  const og2=document.createElement("optgroup");og2.label=slot==="jour"?"Absences":"Absence ½";
+  (slot==="jour"?JOUR_ABS:ABS_HALF).forEach(t=>og2.appendChild(opt("a:"+t,t)));s.appendChild(og2);
+  const og3=document.createElement("optgroup");og3.label="Exceptionnel";
+  EXCEPT.forEach(t=>og3.appendChild(opt("x:"+t,t)));s.appendChild(og3);
+  let cur="";
+  if(slot==="jour"){if(e.jour&&e.am)cur=e.am.k+":"+e.am.v;} else {if(e[slot])cur=e[slot].k+":"+e[slot].v;}
+  s.value=cur;if(cur)s.classList.add(cur[0]);
+  if(lock){s.disabled=true;return s;}
+  s.onchange=ev=>{let x=entries[key];if(!x){x=JSON.parse(JSON.stringify(defaultFor(key)));entries[key]=x;}
+    const val=ev.target.value;const parse=v=>v?{k:v.slice(0,1),v:v.slice(2)}:null;
+    if(slot==="jour"){const o=parse(val);if(o){x.jour=true;x.am=o;x.pm=o;}else{x.jour=false;x.am=null;x.pm=null;}}
+    else{x.jour=false;x[slot]=parse(val);}
+    save();render();};
+  return s;}
+function cell(cap,el){const w=document.createElement("div");const c=document.createElement("span");c.className="cap";c.textContent=cap;w.appendChild(c);w.appendChild(el);return w;}
+
+/* ====== RENDER ====== */
+async function render(){
+  const y=current.getFullYear();
+  document.getElementById("monthTitle").textContent=current.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+  document.getElementById("globalComment").value=globalComments[monthKey()]||"";
+  bindHeader();
+  curFeries=await getFeries(y);
+  const list=document.getElementById("list");list.innerHTML="";
+  const m=current.getMonth(),dim=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=dim;d++){const date=new Date(y,m,d),key=iso(date),w=date.getDay();
+    const isWE=(w===0||w===6),ferieName=curFeries[key],off=isWE||ferieName;
+    const lbl=date.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
+    const e=effectiveEntry(key);
+    const absent=(e.am&&e.am.k==="a")||(e.pm&&e.pm.k==="a")||(e.jour&&e.am&&e.am.k==="a");
+    const row=document.createElement("div");
+    row.className="dayrow"+(ferieName?" ferie":(isWE?" weekend":""))+((absent&&!off)?" absent":"");
+    const dl=document.createElement("div");dl.className="dlabel";
+    dl.innerHTML=lbl+(off?`<small>${ferieName?ferieName:"Week-end"}</small>`:"");
+    row.appendChild(dl);
+    row.appendChild(cell("Matin",buildSelect(key,"am")));
+    row.appendChild(cell("Après-midi",buildSelect(key,"pm")));
+    row.appendChild(cell("Journée",buildSelect(key,"jour")));
+    list.appendChild(row);}
+  computeTotals();
+  renderActions();
+  renderHistory();
+}
+
+/* ====== TOTAUX + COHÉRENCE ====== */
+function computeTotals(){
+  let wNorm=0,wExc=0,abs=0,ouvres=0;const perM={},perX={},perA={};
+  const y=current.getFullYear(),m=current.getMonth(),dim=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=dim;d++){const date=new Date(y,m,d),key=iso(date),w=date.getDay();
+    const off=(w===0||w===6)||curFeries[key]; if(!off)ouvres++;
+    const e=effectiveEntry(key);
+    const acc=(slot,qty)=>{if(!slot)return;
+      if(slot.k==="a"){abs+=qty;perA[slot.v]=(perA[slot.v]||0)+qty;}
+      else if(slot.k==="x"){wExc+=qty;perX[slot.v]=(perX[slot.v]||0)+qty;}
+      else{wNorm+=qty;perM[slot.v]=(perM[slot.v]||0)+qty;}};
+    if(e.jour)acc(e.am,1);else{acc(e.am,0.5);acc(e.pm,0.5);}}
+  document.getElementById("totDays").textContent=num(wNorm);
+  document.getElementById("totExc").textContent=num(wExc);
+  document.getElementById("totAbs").textContent=num(abs);
+  const tjm=parseFloat(profile.tjm)||0;
+  document.getElementById("totMontant").textContent=tjm>0?eur(wNorm*tjm):"—";
+  const bd=document.getElementById("breakdown");bd.innerHTML="";
+  Object.entries(perM).forEach(([n,q])=>{const c=missions.find(x=>x.name===n)?.color||"#3b6ef5";
+    const chip=document.createElement("div");chip.className="chip";
+    chip.innerHTML=`<span class="sw" style="border-radius:50%;background:${c}"></span>${n} : <strong>${num(q)} j</strong>`;bd.appendChild(chip);});
+  Object.entries(perX).forEach(([n,q])=>{const chip=document.createElement("div");chip.className="chip exc";
+    chip.innerHTML=`${n} : <strong>${num(q)} j</strong>`;bd.appendChild(chip);});
+  Object.entries(perA).forEach(([n,q])=>{const chip=document.createElement("div");chip.className="chip abs";
+    chip.innerHTML=`${n} : <strong>${num(q)} j</strong>`;bd.appendChild(chip);});
+  // contrôle de cohérence (travail normal + exceptionnel + absences vs jours ouvrés)
+  const decl=wNorm+wExc+abs, co=document.getElementById("coherence");
+  if(decl<ouvres){co.className="coherence warn";
+    co.textContent=`⚠️ Saisie incomplète : ${num(decl)} j déclarés sur ${num(ouvres)} jours ouvrés — il manque ${num(ouvres-decl)} jour(s).`;}
+  else if(decl>ouvres){co.className="coherence err";
+    co.textContent=`⚠️ Volume déclaré (${num(decl)} j) supérieur aux ${num(ouvres)} jours ouvrés — vérifiez le respect du repos hebdomadaire.`;}
+  else{co.className="coherence ok";
+    co.textContent=`✅ Saisie cohérente : ${num(ouvres)} / ${num(ouvres)} jours ouvrés couverts.`;}
+}
+
+/* ====== LIGNES ====== */
+function buildRows(){const rows=[];
+  const y=current.getFullYear(),m=current.getMonth(),dim=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=dim;d++){const key=iso(new Date(y,m,d)),e=effectiveEntry(key);
+    const T=k=>k==="a"?"Absence":(k==="x"?"Exceptionnel":"Travail");
+    const line=(per,slot,qty)=>{if(!slot)return;rows.push({Date:key,Type:T(slot.k),Periode:per,Mission:slot.v,Quantite:qty});};
+    if(e.jour)line("Journée",e.am,1);else{line("Matin",e.am,0.5);line("Après-midi",e.pm,0.5);}}
+  return rows;}
+
+/* ====== PDF ====== */
+document.getElementById("pdf").onclick=()=>{
+  const rows=buildRows(),mk=monthKey(),mt=meta();
+  const monthLabel=current.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+  const fact=rows.filter(r=>r.Type==="Travail").reduce((s,r)=>s+r.Quantite,0);
+  const exc=rows.filter(r=>r.Type==="Exceptionnel").reduce((s,r)=>s+r.Quantite,0);
+  const abs=rows.filter(r=>r.Type==="Absence").reduce((s,r)=>s+r.Quantite,0);
+  const tjm=parseFloat(profile.tjm)||0;
+  let html=`<h2>Compte-rendu d'activité</h2>
+    <div class="pmeta"><strong>N° :</strong> ${mt.num||"—"} &nbsp;·&nbsp; <strong>Période :</strong> ${monthLabel}<br>
+      <strong>Prestataire :</strong> ${profile.nom||"—"}${profile.siret?" (SIRET "+profile.siret+")":""}<br>
+      <strong>Client :</strong> ${mt.client||"—"} &nbsp;·&nbsp; <strong>Généré le :</strong> ${new Date().toLocaleDateString("fr-FR")}
+      ${mt.status==="soumis"?` &nbsp;·&nbsp; <strong>Statut :</strong> Transmis au client le ${new Date(mt.submittedAt).toLocaleDateString("fr-FR")} (en attente de validation)`:""}</div>
+    <table class="ptable"><thead><tr><th>Date</th><th>Type</th><th>Période</th><th>Mission / Motif</th><th>Qté (j)</th></tr></thead><tbody>`;
+  rows.forEach(r=>{html+=`<tr><td>${frDate(r.Date)}</td><td>${r.Type}</td><td>${r.Periode}</td><td>${r.Mission}</td><td>${num(r.Quantite)}</td></tr>`;});
+  if(rows.length===0)html+=`<tr><td colspan="5" style="text-align:center;color:#999">Aucune saisie</td></tr>`;
+  html+=`</tbody></table><div class="ptot">Jours facturables : ${num(fact)}${exc>0?` &nbsp;|&nbsp; Exceptionnels : ${num(exc)}`:""} &nbsp;|&nbsp; Absences : ${num(abs)}${tjm>0?` &nbsp;|&nbsp; Montant estimatif HT : ${eur(fact*tjm)}`:""}</div>`;
+  const gc=globalComments[mk]||"";if(gc)html+=`<div style="font-size:13px;margin-top:10px;"><strong>Commentaire :</strong> ${gc}</div>`;
+  html+=`<div class="psign"><span>Signature prestataire :</span><span>Signature client :</span></div>`;
+  document.getElementById("pdoc").innerHTML=html;window.print();};
+
+/* ====== VALIDATION / SOUMISSION / VERROU ====== */
+const validate=document.getElementById("validate"),sendBtn=document.getElementById("send");
+function syncSend(){sendBtn.disabled=!validate.checked;}
+validate.onchange=()=>{syncSend();setStatus("","");};
+function renderActions(){const locked=isLocked();
+  document.getElementById("actionsZone").style.display=locked?"none":"block";
+  const b=document.getElementById("lockBanner");b.style.display=locked?"flex":"none";
+  if(locked)document.getElementById("lockDate").textContent=new Date(meta().submittedAt).toLocaleDateString("fr-FR");
+  else{validate.checked=false;syncSend();}}
+sendBtn.onclick=async()=>{
+  if(!validate.checked){setStatus("Cochez la validation avant de soumettre.","err");return;}
+  const rows=buildRows(),mk=monthKey();if(rows.length===0){setStatus("Aucune ligne à soumettre.","err");return;}
+  const mt=meta();
+  const payload={num:mt.num,mois:mk,prestataire:profile.nom||"",client:mt.client||"",tjm:parseFloat(profile.tjm)||0,commentaire:globalComments[mk]||"",valide:true,lignes:rows};
+  mt.status="soumis";mt.submittedAt=new Date().toISOString();save();
+  if(!MAKE_WEBHOOK_URL){setStatus("CRA transmis au client et verrouillé (envoi réel inactif tant que le webhook n'est pas branché).","ok");console.log("Payload :",payload);render();return;}
+  try{setStatus("Transmission…","");
+    const res=await fetch(MAKE_WEBHOOK_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    setStatus(res.ok?"CRA transmis au client ✓":"Erreur d'envoi (CRA verrouillé localement).",res.ok?"ok":"err");
+  }catch(e){setStatus("Erreur réseau : "+e.message,"err");}
+  render();};
+document.getElementById("reopen").onclick=()=>{const mt=meta();mt.status="brouillon";mt.submittedAt=null;save();render();setStatus("CRA rouvert pour rectification.","");};
+
+/* ====== HISTORIQUE ====== */
+function totalsForMonth(mk){const y=+mk.slice(0,4),m=+mk.slice(5,7)-1,f=feriesCache[y]||{},dim=new Date(y,m+1,0).getDate();
+  let fact=0,exc=0,abs=0;
+  for(let d=1;d<=dim;d++){const key=iso(new Date(y,m,d)),e=effFor(key,f);
+    const acc=(s,q)=>{if(!s)return;if(s.k==="a")abs+=q;else if(s.k==="x")exc+=q;else fact+=q;};
+    if(e.jour)acc(e.am,1);else{acc(e.am,0.5);acc(e.pm,0.5);}}
+  const tjm=parseFloat(profile.tjm)||0;return{fact,exc,abs,montant:fact*tjm};}
+async function renderHistory(){
+  const set=new Set([...Object.keys(craMeta),...Object.keys(globalComments),...Object.keys(entries).map(k=>k.slice(0,7))]);
+  const months=[...set].filter(k=>/^\d{4}-\d{2}$/.test(k)).sort().reverse();
+  const years=[...new Set(months.map(k=>+k.slice(0,4)))];
+  await Promise.all(years.map(getFeries));
+  const wrap=document.getElementById("histList");
+  if(months.length===0){wrap.innerHTML='<div class="dlabel" style="font-weight:500;color:var(--muted)">Aucun CRA enregistré pour le moment.</div>';return;}
+  wrap.innerHTML="";
+  months.forEach(mk=>{const t=totalsForMonth(mk),mt=craMeta[mk];
+    const lbl=new Date(+mk.slice(0,4),+mk.slice(5,7)-1,1).toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
+    const statut=mt&&mt.status==="soumis"?"🔒 Transmis":"Brouillon";
+    const row=document.createElement("div");row.className="histrow";
+    row.innerHTML=`<div style="text-transform:capitalize"><strong>${lbl}</strong>${mk===monthKey()?'<span class="badge">en cours</span>':''}</div>
+      <div>${statut}</div>
+      <div>${num(t.fact)} j${t.exc?` · ${num(t.exc)} exc`:''}${t.abs?` · ${num(t.abs)} abs`:''}</div>
+      <div>${t.montant>0?eur(t.montant):'—'}</div>
+      <div class="hactions"><button class="sm" data-o="${mk}">Ouvrir</button><button class="sm" data-d="${mk}">Dupliquer →</button></div>`;
+    row.querySelector("[data-o]").onclick=()=>{const[yy,mm]=mk.split("-");current=new Date(+yy,+mm-1,1);render();renderMissions();window.scrollTo({top:0,behavior:"smooth"});};
+    row.querySelector("[data-d]").onclick=()=>duplicateMonth(mk);
+    wrap.appendChild(row);});}
+function duplicateMonth(srcMk){
+  if(isLocked()){setStatus("Le mois affiché est verrouillé — rouvrez-le avant de dupliquer.","err");return;}
+  const tgtMk=monthKey();if(srcMk===tgtMk){setStatus("Le mois source est déjà affiché. Ouvrez d'abord le mois cible.","err");return;}
+  const sy=+srcMk.slice(0,4),sm=+srcMk.slice(5,7)-1,sf=feriesCache[sy]||{};
+  const ty=current.getFullYear(),tm=current.getMonth();
+  const sDim=new Date(sy,sm+1,0).getDate(),tDim=new Date(ty,tm+1,0).getDate();let n=0;
+  for(let d=1;d<=Math.min(sDim,tDim);d++){
+    const sKey=iso(new Date(sy,sm,d)),tKey=iso(new Date(ty,tm,d)),tw=new Date(ty,tm,d).getDay();
+    if(tw===0||tw===6||curFeries[tKey])continue;
+    const se=effFor(sKey,sf);if(!se.am&&!se.pm&&!se.jour)continue;
+    entries[tKey]=JSON.parse(JSON.stringify(se));n++;}
+  save();render();renderMissions();
+  setStatus(`Dupliqué : ${n} jour(s) reportés sur ${current.toLocaleDateString("fr-FR",{month:"long",year:"numeric"})} (report par n° de jour, jours ouvrés uniquement).`,"ok");}
+
+/* ====== DIVERS ====== */
+document.getElementById("globalComment").oninput=e=>{globalComments[monthKey()]=e.target.value;save();};
+function setStatus(t,c){const s=document.getElementById("status");s.textContent=t;s.className="status "+(c||"");}
+document.getElementById("prev").onclick=()=>{current.setMonth(current.getMonth()-1);render();renderMissions();};
+document.getElementById("next").onclick=()=>{current.setMonth(current.getMonth()+1);render();renderMissions();};
+document.getElementById("today").onclick=()=>{current=new Date();current.setDate(1);render();renderMissions();};
+document.getElementById("clear").onclick=()=>{if(isLocked())return;const mk=monthKey();
+  Object.keys(entries).forEach(k=>{if(k.startsWith(mk))delete entries[k];});
+  delete globalComments[mk];save();render();setStatus("Mois réinitialisé.","");};
+
+/* ====== INIT ====== */
+renderMissions(); render();
+</script>
+</body>
+</html>

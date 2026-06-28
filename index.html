@@ -209,7 +209,7 @@
 
 <script>
 /* ====== CONFIG ====== */
-const MAKE_WEBHOOK_URL = "";
+const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/rwoauj9c3r4ptyodnyb333eevumrwnai";
 const ABS_HALF=["Congé payé","Intercontrat","RTT","Formation","Sans solde","Autre"];
 const JOUR_ABS=["Congé payé","Maladie","Intercontrat","RTT","Formation","Sans solde","Autre"];
 const EXCEPT=["Astreinte","Permanence"];
@@ -409,7 +409,7 @@ sendBtn.onclick=async()=>{
   if(!validate.checked){setStatus("Cochez la validation avant de soumettre.","err");return;}
   const rows=buildRows(),mk=monthKey();if(rows.length===0){setStatus("Aucune ligne à soumettre.","err");return;}
   const mt=meta();
-  const payload={num:mt.num,mois:mk,prestataire:profile.nom||"",client:mt.client||"",tjm:parseFloat(profile.tjm)||0,commentaire:globalComments[mk]||"",valide:true,lignes:rows};
+  const payload={num:mt.num,mois:mk,prestataire:profile.nom||"",email:profile.email||"",siret:profile.siret||"",client:mt.client||"",tjm:parseFloat(profile.tjm)||0,commentaire:globalComments[mk]||"",valide:true,lignes:rows};
   mt.status="soumis";mt.submittedAt=new Date().toISOString();save();
   if(!MAKE_WEBHOOK_URL){setStatus("CRA transmis au client et verrouillé (envoi réel inactif tant que le webhook n'est pas branché).","ok");console.log("Payload :",payload);render();return;}
   try{setStatus("Transmission…","");

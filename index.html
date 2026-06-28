@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CRA Freelance — Saisie mensuelle</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root{
     --bg:#f4f6fb; --card:#ffffff; --ink:#1f2733; --muted:#7a869a;
@@ -410,6 +411,17 @@ sendBtn.onclick=async()=>{
   const rows=buildRows(),mk=monthKey();if(rows.length===0){setStatus("Aucune ligne à soumettre.","err");return;}
   const mt=meta();
   const payload={num:mt.num,mois:mk,prestataire:profile.nom||"",email:profile.email||"",siret:profile.siret||"",client:mt.client||"",tjm:parseFloat(profile.tjm)||0,commentaire:globalComments[mk]||"",valide:true,lignes:rows};
+  // Génération PDF détaillé du formulaire en base64 (B.4 Live 3)
+  setStatus("Génération du PDF détaillé…","");
+  try{
+    const cible=document.querySelector('.wrap');
+    const opt={margin:10,filename:`CRA_DETAIL_${(profile.nom||'sansnom').replace(/\s+/g,'_')}_${mk}.pdf`,image:{type:'jpeg',quality:0.92},html2canvas:{scale:1.4,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+    const pdfBlob=await html2pdf().set(opt).from(cible).output('blob');
+    const reader=new FileReader();
+    const base64=await new Promise((resolve,reject)=>{reader.onloadend=()=>resolve(reader.result.split(',')[1]);reader.onerror=reject;reader.readAsDataURL(pdfBlob);});
+    payload.pdfDetailBase64=base64;
+    payload.pdfDetailFilename=opt.filename;
+  }catch(err){console.warn("Erreur génération PDF détail :",err);setStatus("Avertissement : PDF détaillé non généré, envoi quand même…","");}
   mt.status="soumis";mt.submittedAt=new Date().toISOString();save();
   if(!MAKE_WEBHOOK_URL){setStatus("CRA transmis au client et verrouillé (envoi réel inactif tant que le webhook n'est pas branché).","ok");console.log("Payload :",payload);render();return;}
   try{setStatus("Transmission…","");

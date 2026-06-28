@@ -415,7 +415,7 @@ sendBtn.onclick=async()=>{
   setStatus("Génération du PDF détaillé…","");
   try{
     const cible=document.querySelector('.wrap');
-    const opt={margin:10,filename:`CRA_DETAIL_${(profile.nom||'sansnom').replace(/\s+/g,'_')}_${mk}.pdf`,image:{type:'jpeg',quality:0.92},html2canvas:{scale:1.4,useCORS:true,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+const opt={margin:[5,5,5,5],filename:`CRA_DETAIL_${(profile.nom||'sansnom').replace(/\s+/g,'_')}_${mk}.pdf`,image:{type:'jpeg',quality:0.92},html2canvas:{scale:0.9,useCORS:true,logging:false,windowWidth:1200,letterRendering:true,scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'portrait',compress:true},pagebreak:{mode:['avoid-all','css','legacy']}};
     const pdfBlob=await html2pdf().set(opt).from(cible).output('blob');
     const reader=new FileReader();
     const base64=await new Promise((resolve,reject)=>{reader.onloadend=()=>resolve(reader.result.split(',')[1]);reader.onerror=reject;reader.readAsDataURL(pdfBlob);});

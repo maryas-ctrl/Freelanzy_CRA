@@ -213,7 +213,7 @@
 <script>
 /* ====== CONFIG ====== */
 const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/rwoauj9c3r4ptyodnyb333eevumrwnai";
-const F0_HUB_URL = "https://hook.eu2.make.com/msgqql6lcrq6j8acdu21ttytpfwusjj2"; // F0 Hub Alim — auto-fill entête (?freelance=rec...)
+const F0_HUB_URL = "https://hook.eu2.make.com/msgqql6lcrq6j8acdu21ttytpfwusjj2"; // F0 Hub Alim — auto-fill entête sécurisé (?token=...)
 const CLIENT_LOGO_URL = ""; // Logo Freelanzy (meme fichier que l entete portail) affiche en haut du CRA
 const ABS_HALF=["Congé payé","Intercontrat","RTT","Formation","Sans solde","Autre"];
 const JOUR_ABS=["Congé payé","Maladie","Intercontrat","RTT","Formation","Sans solde","Autre"];
@@ -507,14 +507,14 @@ document.getElementById("clear").onclick=()=>{if(isLocked())return;const mk=mont
   Object.keys(entries).forEach(k=>{if(k.startsWith(mk))delete entries[k];});
   delete globalComments[mk];save();render();setStatus("Mois réinitialisé.","");};
 
-/* ====== F0 HUB ALIM — AUTO-FILL ENTÊTE (lien personnalisé ?freelance=rec...) ====== */
+/* ====== F0 HUB ALIM — AUTO-FILL ENTÊTE (lien personnalisé sécurisé ?token=...) ====== */
 const _hubParams=new URLSearchParams(location.search);
-const _freelanceParam=_hubParams.get("freelance");
+const _tokenParam=_hubParams.get("token");
 window.hubActive=false;
 async function loadHub(){
-  if(!_freelanceParam)return false;                 // mode test : aucune URL param → saisie manuelle conservée
+  if(!_tokenParam)return false;                 // mode test : aucun token → saisie manuelle conservée
   try{
-    const r=await fetch(F0_HUB_URL+"?freelance="+encodeURIComponent(_freelanceParam));
+    const r=await fetch(F0_HUB_URL+"?token="+encodeURIComponent(_tokenParam));
     const data=await r.json();
     if(!data||!data.freelance||!data.freelance.id)return false;
     const f=data.freelance,m=data.mission||{};

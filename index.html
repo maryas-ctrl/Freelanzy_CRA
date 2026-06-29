@@ -216,6 +216,7 @@
 /* ====== CONFIG ====== */
 const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/rwoauj9c3r4ptyodnyb333eevumrwnai";
 const F0_HUB_URL = "https://hook.eu2.make.com/msgqql6lcrq6j8acdu21ttytpfwusjj2"; // F0 Hub Alim — auto-fill entête (?freelance=rec...)
+const CLIENT_LOGO_URL = ""; // Logo client affiché en haut du CRA — colle ici l'URL d'une image (PNG/JPG/SVG hébergée ; idéalement CORS-accessible pour le PDF détaillé)
 const ABS_HALF=["Congé payé","Intercontrat","RTT","Formation","Sans solde","Autre"];
 const JOUR_ABS=["Congé payé","Maladie","Intercontrat","RTT","Formation","Sans solde","Autre"];
 const EXCEPT=["Astreinte","Permanence"];
@@ -390,7 +391,8 @@ function craDocHTML(){
   const exc=rows.filter(r=>r.Type==="Exceptionnel").reduce((s,r)=>s+r.Quantite,0);
   const abs=rows.filter(r=>r.Type==="Absence").reduce((s,r)=>s+r.Quantite,0);
   const tjm=parseFloat(profile.tjm)||0;
-  let html=`<h2>Compte-rendu d'activité</h2>
+  const logo=CLIENT_LOGO_URL?`<img src="${CLIENT_LOGO_URL}" alt="Logo client" style="max-height:46px;max-width:170px;object-fit:contain;">`:"";
+  let html=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;"><h2 style="margin:0;">Compte-rendu d'activité</h2>${logo}</div>
     <div class="pmeta"><strong>N° :</strong> ${mt.num||"—"} &nbsp;·&nbsp; <strong>Période :</strong> ${monthLabel}<br>
       <strong>Prestataire :</strong> ${profile.nom||"—"}${profile.siret?" (SIRET "+profile.siret+")":""}<br>
       <strong>Client :</strong> ${mt.client||"—"} &nbsp;·&nbsp; <strong>Généré le :</strong> ${new Date().toLocaleDateString("fr-FR")}
@@ -411,8 +413,9 @@ function craFileBase(){
 document.getElementById("pdf").onclick=()=>{
   document.getElementById("pdoc").innerHTML=craDocHTML();
   const prev=document.title;document.title=craFileBase();
+  const restore=()=>{document.title=prev;window.removeEventListener('afterprint',restore);};
+  window.addEventListener('afterprint',restore);
   window.print();
-  setTimeout(()=>{document.title=prev;},800);
 };
 
 /* ====== VALIDATION / SOUMISSION / VERROU ====== */

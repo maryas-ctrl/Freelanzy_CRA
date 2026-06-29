@@ -117,9 +117,7 @@
       <button class="ghost" id="today">Mois en cours</button>
     </div>
     <div class="brand">
-      <img src="logo-freelanzy.png" alt="Freelanzy" class="logo-img"
-           onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-      <span class="logo-fallback" style="display:none">
+      <span class="logo-fallback">
         <svg width="34" height="26" viewBox="0 0 34 26" xmlns="http://www.w3.org/2000/svg">
           <circle cx="9" cy="8" r="4.5" fill="#7b86ff"/><path d="M2.5 24 a6.5 6.5 0 0 1 13 0" fill="#3b6ef5"/>
           <circle cx="24" cy="8" r="4.5" fill="#7b86ff"/><path d="M17.5 24 a6.5 6.5 0 0 1 13 0" fill="#3b6ef5"/>
@@ -216,7 +214,7 @@
 /* ====== CONFIG ====== */
 const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/rwoauj9c3r4ptyodnyb333eevumrwnai";
 const F0_HUB_URL = "https://hook.eu2.make.com/msgqql6lcrq6j8acdu21ttytpfwusjj2"; // F0 Hub Alim — auto-fill entête (?freelance=rec...)
-const CLIENT_LOGO_URL = "logo-freelanzy.png"; // Logo Freelanzy (meme fichier que l entete portail) affiche en haut du CRA
+const CLIENT_LOGO_URL = ""; // Logo Freelanzy (meme fichier que l entete portail) affiche en haut du CRA
 const ABS_HALF=["Congé payé","Intercontrat","RTT","Formation","Sans solde","Autre"];
 const JOUR_ABS=["Congé payé","Maladie","Intercontrat","RTT","Formation","Sans solde","Autre"];
 const EXCEPT=["Astreinte","Permanence"];
@@ -391,7 +389,7 @@ function craDocHTML(){
   const exc=rows.filter(r=>r.Type==="Exceptionnel").reduce((s,r)=>s+r.Quantite,0);
   const abs=rows.filter(r=>r.Type==="Absence").reduce((s,r)=>s+r.Quantite,0);
   const tjm=parseFloat(profile.tjm)||0;
-  const logo=CLIENT_LOGO_URL?`<img src="${CLIENT_LOGO_URL}" alt="Logo client" style="max-height:46px;max-width:170px;object-fit:contain;">`:"";
+  const logo=CLIENT_LOGO_URL?`<img src="${CLIENT_LOGO_URL}" alt="Logo" style="max-height:46px;max-width:170px;object-fit:contain;">`:`<span style="display:inline-flex;align-items:center;gap:8px;font-size:22px;font-weight:700;line-height:1;"><svg width="38" height="29" viewBox="0 0 34 26" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="4.5" fill="#7b86ff"/><path d="M2.5 24 a6.5 6.5 0 0 1 13 0" fill="#3b6ef5"/><circle cx="24" cy="8" r="4.5" fill="#7b86ff"/><path d="M17.5 24 a6.5 6.5 0 0 1 13 0" fill="#3b6ef5"/></svg><span><span style="color:#7b86ff">free</span><span style="color:#2b3a8f;font-weight:800">lanzy</span></span></span>`;
   let html=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;"><h2 style="margin:0;">Compte-rendu d'activité</h2>${logo}</div>
     <div class="pmeta"><strong>N° :</strong> ${mt.num||"—"} &nbsp;·&nbsp; <strong>Période :</strong> ${monthLabel}<br>
       <strong>Prestataire :</strong> ${profile.nom||"—"}${profile.siret?" (SIRET "+profile.siret+")":""}<br>

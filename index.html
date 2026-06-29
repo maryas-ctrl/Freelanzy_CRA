@@ -211,6 +211,7 @@
 <script>
 /* ====== CONFIG ====== */
 const MAKE_WEBHOOK_URL = "https://hook.eu2.make.com/rwoauj9c3r4ptyodnyb333eevumrwnai";
+const F0_HUB_URL = "https://hook.eu2.make.com/msgqql6lcrq6j8acdu21ttytpfwusjj2"; // F0 Hub Alim — auto-fill entête (?freelance=rec...)
 const ABS_HALF=["Congé payé","Intercontrat","RTT","Formation","Sans solde","Autre"];
 const JOUR_ABS=["Congé payé","Maladie","Intercontrat","RTT","Formation","Sans solde","Autre"];
 const EXCEPT=["Astreinte","Permanence"];
@@ -262,7 +263,8 @@ function bindHeader(){const set=(id,v)=>{document.getElementById(id).value=v||""
   const mt=meta();set("cClient",mt.client);set("cNum",mt.num);
   const lock=isLocked();
   ["cClient","cNum","mName","mStart","mEnd","globalComment"].forEach(id=>document.getElementById(id).disabled=lock);
-  document.getElementById("addMission").disabled=lock;}
+  document.getElementById("addMission").disabled=lock;
+  if(window.hubActive){["pNom","pSiret","pEmail","pTjm","cClient"].forEach(id=>document.getElementById(id).disabled=true);}}
 [["pNom","nom"],["pSiret","siret"],["pEmail","email"],["pTjm","tjm"]].forEach(([id,key])=>{
   document.getElementById(id).oninput=e=>{profile[key]=e.target.value;save();if(key==="tjm")computeTotals();renderHistory();};});
 document.getElementById("cClient").oninput=e=>{meta().client=e.target.value;save();};
@@ -410,7 +412,8 @@ sendBtn.onclick=async()=>{
   if(!validate.checked){setStatus("Cochez la validation avant de soumettre.","err");return;}
   const rows=buildRows(),mk=monthKey();if(rows.length===0){setStatus("Aucune ligne à soumettre.","err");return;}
   const mt=meta();
-  const payload={num:mt.num,mois:mk,prestataire:profile.nom||"",email:profile.email||"",siret:profile.siret||"",client:mt.client||"",tjm:parseFloat(profile.tjm)||0,commentaire:globalComments[mk]||"",valide:true,lignes:rows};
+  const payload={num:mt.num,mois:mk,prestataire:profile.nom||"",email:profile.email||"",siret:profile.siret||"",client:mt.client||"",tjm:parseFloat(profile.tjm)||0,commentaire:globalComments[mk]||"",valide:true,lignes:rows,
+    freelanceId:profile.freelanceId||"",missionId:profile.missionId||"",clientId:profile.clientId||"",emailReferent:profile.emailReferent||""};
   // Génération PDF détaillé du formulaire en base64 (B.4 Live 3)
   setStatus("Génération du PDF détaillé…","");
   try{
@@ -482,8 +485,35 @@ document.getElementById("clear").onclick=()=>{if(isLocked())return;const mk=mont
   Object.keys(entries).forEach(k=>{if(k.startsWith(mk))delete entries[k];});
   delete globalComments[mk];save();render();setStatus("Mois réinitialisé.","");};
 
+/* ====== F0 HUB ALIM — AUTO-FILL ENTÊTE (lien personnalisé ?freelance=rec...) ====== */
+const _hubParams=new URLSearchParams(location.search);
+const _freelanceParam=_hubParams.get("freelance");
+window.hubActive=false;
+async function loadHub(){
+  if(!_freelanceParam)return false;                 // mode test : aucune URL param → saisie manuelle conservée
+  try{
+    const r=await fetch(F0_HUB_URL+"?freelance="+encodeURIComponent(_freelanceParam));
+    const data=await r.json();
+    if(!data||!data.freelance||!data.freelance.id)return false;
+    const f=data.freelance,m=data.mission||{};
+    profile.nom=((f.prenom||"")+" "+(f.nom||"")).trim();
+    profile.email=f.email||""; profile.siret=f.siret||"";
+    if(f.tjm)profile.tjm=String(f.tjm);
+    profile.freelanceId=f.id||""; profile.missionId=m.id||""; profile.clientId=m.client_id||"";
+    profile.emailReferent=m.email_referent||"";
+    if(m.intitule||m.client_nom){missions=[{name:m.client_nom||m.intitule,color:"#3b6ef5",start:"",end:"",ref:m.reference||"",missionId:m.id||""}];}
+    meta().client=m.client_nom||"";
+    window.hubActive=true; save();
+    const card=document.querySelector('.card');
+    if(card){const b=document.createElement('div');b.className='hint';b.style.background='#e7f6f0';b.style.color='#1aa179';
+      b.innerHTML=`🔗 Profil chargé depuis Freelanzy — <strong>${profile.nom}</strong>${m.reference?` · mission ${m.reference}`:""}${m.client_nom?` · client ${m.client_nom}`:""}. En-tête en lecture seule.`;
+      card.insertBefore(b,card.firstChild);}
+    return true;
+  }catch(e){console.warn("F0 Hub indisponible — bascule en saisie manuelle :",e);return false;}
+}
+
 /* ====== INIT ====== */
-renderMissions(); render();
+(async function init(){ await loadHub(); renderMissions(); render(); })();
 </script>
 </body>
 </html>

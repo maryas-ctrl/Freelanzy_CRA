@@ -400,11 +400,21 @@ function craDocHTML(){
   rows.forEach(r=>{html+=`<tr><td>${frDate(r.Date)}</td><td>${r.Type}</td><td>${r.Periode}</td><td>${r.Mission}</td><td>${num(r.Quantite)}</td></tr>`;});
   if(rows.length===0)html+=`<tr><td colspan="5" style="text-align:center;color:#999">Aucune saisie</td></tr>`;
   html+=`</tbody></table><div class="ptot">Jours facturables : ${num(fact)}${exc>0?` &nbsp;|&nbsp; Exceptionnels : ${num(exc)}`:""} &nbsp;|&nbsp; Absences : ${num(abs)}${tjm>0?` &nbsp;|&nbsp; Montant estimatif HT : ${eur(fact*tjm)}`:""}</div>`;
-  const gc=globalComments[mk]||"";if(gc)html+=`<div style="font-size:13px;margin-top:10px;"><strong>Commentaire :</strong> ${gc}</div>`;
+  const gc=globalComments[mk]||"";html+=`<div style="font-size:13px;margin-top:14px;padding:8px 10px;border:1px solid #e2e6ee;border-radius:6px;background:#fafbfe;"><strong>Commentaire :</strong> ${gc||"—"}</div>`;
   html+=`<div class="psign"><span>Signature prestataire :</span><span>Signature client :</span></div>`;
   return html;
 }
-document.getElementById("pdf").onclick=()=>{document.getElementById("pdoc").innerHTML=craDocHTML();window.print();};
+function craFileBase(){
+  const clean=s=>(s||'').normalize('NFD').replace(/[^\x00-\x7F]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+  const periode=clean(current.toLocaleDateString("fr-FR",{month:"long",year:"numeric"}));
+  return `CRA_${clean(profile.nom)||'sansnom'}_${periode}`;
+}
+document.getElementById("pdf").onclick=()=>{
+  document.getElementById("pdoc").innerHTML=craDocHTML();
+  const prev=document.title;document.title=craFileBase();
+  window.print();
+  setTimeout(()=>{document.title=prev;},800);
+};
 
 /* ====== VALIDATION / SOUMISSION / VERROU ====== */
 const validate=document.getElementById("validate"),sendBtn=document.getElementById("send");
@@ -429,7 +439,7 @@ sendBtn.onclick=async()=>{
     holder.style.cssText='position:fixed;left:-99999px;top:0;width:794px;background:#fff;padding:24px;box-sizing:border-box;';
     holder.innerHTML=craDocHTML();
     document.body.appendChild(holder);
-    const opt={margin:[8,8,8,8],filename:`CRA_DETAIL_${(profile.nom||'sansnom').replace(/\s+/g,'_')}_${mk}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff',windowWidth:794},jsPDF:{unit:'mm',format:'a4',orientation:'portrait',compress:true},pagebreak:{mode:['css','legacy']}};
+    const opt={margin:[8,8,8,8],filename:craFileBase()+'_detail.pdf',image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff',windowWidth:794},jsPDF:{unit:'mm',format:'a4',orientation:'portrait',compress:true},pagebreak:{mode:['css','legacy']}};
     let pdfBlob;
     try{pdfBlob=await html2pdf().set(opt).from(holder).output('blob');}finally{document.body.removeChild(holder);}
     const reader=new FileReader();

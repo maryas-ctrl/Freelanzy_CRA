@@ -99,6 +99,11 @@
   .ptable th{background:#eef2fb;}
   .ptot{font-size:14px;font-weight:700;margin:8px 0;}
   .psign{margin-top:30px;font-size:13px;display:flex;justify-content:space-between;}
+  .pdfdetail{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111;}
+  .pdfdetail h2{font-size:18px;}
+  .pdfdetail .ptable{font-size:11px;}
+  .pdfdetail .ptable th,.pdfdetail .ptable td{padding:3px 7px;}
+  .pdfdetail .psign{margin-top:20px;}
 </style>
 </head>
 <body>
@@ -379,7 +384,7 @@ function buildRows(){const rows=[];
   return rows;}
 
 /* ====== PDF ====== */
-document.getElementById("pdf").onclick=()=>{
+function craDocHTML(){
   const rows=buildRows(),mk=monthKey(),mt=meta();
   const monthLabel=current.toLocaleDateString("fr-FR",{month:"long",year:"numeric"});
   const fact=rows.filter(r=>r.Type==="Travail").reduce((s,r)=>s+r.Quantite,0);
@@ -397,7 +402,9 @@ document.getElementById("pdf").onclick=()=>{
   html+=`</tbody></table><div class="ptot">Jours facturables : ${num(fact)}${exc>0?` &nbsp;|&nbsp; Exceptionnels : ${num(exc)}`:""} &nbsp;|&nbsp; Absences : ${num(abs)}${tjm>0?` &nbsp;|&nbsp; Montant estimatif HT : ${eur(fact*tjm)}`:""}</div>`;
   const gc=globalComments[mk]||"";if(gc)html+=`<div style="font-size:13px;margin-top:10px;"><strong>Commentaire :</strong> ${gc}</div>`;
   html+=`<div class="psign"><span>Signature prestataire :</span><span>Signature client :</span></div>`;
-  document.getElementById("pdoc").innerHTML=html;window.print();};
+  return html;
+}
+document.getElementById("pdf").onclick=()=>{document.getElementById("pdoc").innerHTML=craDocHTML();window.print();};
 
 /* ====== VALIDATION / SOUMISSION / VERROU ====== */
 const validate=document.getElementById("validate"),sendBtn=document.getElementById("send");
@@ -417,9 +424,14 @@ sendBtn.onclick=async()=>{
   // Génération PDF détaillé du formulaire en base64 (B.4 Live 3)
   setStatus("Génération du PDF détaillé…","");
   try{
-    const cible=document.querySelector('.wrap');
-const opt={margin:[5,5,5,5],filename:`CRA_DETAIL_${(profile.nom||'sansnom').replace(/\s+/g,'_')}_${mk}.pdf`,image:{type:'jpeg',quality:0.92},html2canvas:{scale:0.9,useCORS:true,logging:false,windowWidth:1200,letterRendering:true,scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'portrait',compress:true},pagebreak:{mode:['avoid-all','css','legacy']}};
-    const pdfBlob=await html2pdf().set(opt).from(cible).output('blob');
+    const holder=document.createElement('div');
+    holder.className='pdoc pdfdetail';
+    holder.style.cssText='position:fixed;left:-99999px;top:0;width:794px;background:#fff;padding:24px;box-sizing:border-box;';
+    holder.innerHTML=craDocHTML();
+    document.body.appendChild(holder);
+    const opt={margin:[8,8,8,8],filename:`CRA_DETAIL_${(profile.nom||'sansnom').replace(/\s+/g,'_')}_${mk}.pdf`,image:{type:'jpeg',quality:0.95},html2canvas:{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff',windowWidth:794},jsPDF:{unit:'mm',format:'a4',orientation:'portrait',compress:true},pagebreak:{mode:['css','legacy']}};
+    let pdfBlob;
+    try{pdfBlob=await html2pdf().set(opt).from(holder).output('blob');}finally{document.body.removeChild(holder);}
     const reader=new FileReader();
     const base64=await new Promise((resolve,reject)=>{reader.onloadend=()=>resolve(reader.result.split(',')[1]);reader.onerror=reject;reader.readAsDataURL(pdfBlob);});
     payload.pdfDetailBase64=base64;

@@ -202,7 +202,7 @@
 
   <section class="card">
     <h3>📚 Historique des CRA</h3>
-    <div class="histhead"><div>Mois</div><div>Statut</div><div>Activité</div><div></div></div>
+    <div class="histhead" id="histHead"><div>Mois</div><div>Statut</div><div>Activité</div><div></div></div>
     <div id="histList"></div>
   </section>
 
@@ -469,6 +469,8 @@ function totalsForMonth(mk){const y=+mk.slice(0,4),m=+mk.slice(5,7)-1,f=feriesCa
 async function renderHistory(){
   const wrapEl=document.getElementById("histList");
   if(window.hubActive && hubHisto){   // mode portail : historique RÉEL depuis Airtable (lecture seule, pas d'actions)
+    const esc=s=>(s||"").replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+    const hh=document.getElementById("histHead");if(hh)hh.innerHTML='<div>Mois</div><div>Statut</div><div>Activité</div><div>Commentaire</div>';
     if(!hubHisto.length){wrapEl.innerHTML='<div class="dlabel" style="font-weight:500;color:var(--muted)">Aucun CRA enregistré pour le moment.</div>';return;}
     const stLabel=s=>({"Demandé":"À compléter","Soumis":"🔒 Soumis","Refusé":"⚠️ Refusé","À corriger":"✏️ À corriger","Validé":"✅ Validé","Émis":"✅ Émis"}[s]||s||"—");
     wrapEl.innerHTML="";
@@ -478,7 +480,7 @@ async function renderHistory(){
       row.innerHTML=`<div style="text-transform:capitalize"><strong>${lbl}</strong>${mk===monthKey()?'<span class="badge">en cours</span>':''}</div>
         <div>${stLabel(h.statut)}</div>
         <div>${num(parseFloat(h.jours)||0)} j</div>
-        <div class="hactions"></div>`;
+        <div style="color:var(--muted)">${esc(h.commentaire)||'—'}</div>`;
       wrapEl.appendChild(row);});
     return;
   }

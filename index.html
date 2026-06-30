@@ -227,6 +227,7 @@ let entries=JSON.parse(localStorage.getItem("cra_entries4")||"{}");
 let globalComments=JSON.parse(localStorage.getItem("cra_gcom4")||"{}");
 let profile=JSON.parse(localStorage.getItem("cra_profile")||"{}");
 let craMeta=JSON.parse(localStorage.getItem("cra_meta")||"{}");
+let hubHisto=null; // historique réel des CRA renvoyé par F0 (mode portail, lecture seule)
 let feriesCache={}, curFeries={};
 const palette=["#3b6ef5","#1aa179","#e67e22","#9b59b6","#e74c3c","#16a085","#d35400","#2c3e50"];
 
@@ -466,6 +467,21 @@ function totalsForMonth(mk){const y=+mk.slice(0,4),m=+mk.slice(5,7)-1,f=feriesCa
     if(e.jour)acc(e.am,1);else{acc(e.am,0.5);acc(e.pm,0.5);}}
   const tjm=parseFloat(profile.tjm)||0;return{fact,exc,abs,montant:fact*tjm};}
 async function renderHistory(){
+  const wrapEl=document.getElementById("histList");
+  if(window.hubActive && hubHisto){   // mode portail : historique RÉEL depuis Airtable (lecture seule, pas d'actions)
+    if(!hubHisto.length){wrapEl.innerHTML='<div class="dlabel" style="font-weight:500;color:var(--muted)">Aucun CRA enregistré pour le moment.</div>';return;}
+    const stLabel=s=>({"Demandé":"À compléter","Soumis":"🔒 Soumis","Refusé":"⚠️ Refusé","À corriger":"✏️ À corriger","Validé":"✅ Validé","Émis":"✅ Émis"}[s]||s||"—");
+    wrapEl.innerHTML="";
+    hubHisto.forEach(h=>{const mk=String(h.mois||"");
+      const lbl=/^\d{4}-\d{2}$/.test(mk)?new Date(+mk.slice(0,4),+mk.slice(5,7)-1,1).toLocaleDateString("fr-FR",{month:"long",year:"numeric"}):mk;
+      const row=document.createElement("div");row.className="histrow";
+      row.innerHTML=`<div style="text-transform:capitalize"><strong>${lbl}</strong>${mk===monthKey()?'<span class="badge">en cours</span>':''}</div>
+        <div>${stLabel(h.statut)}</div>
+        <div>${num(parseFloat(h.jours)||0)} j</div>
+        <div class="hactions"></div>`;
+      wrapEl.appendChild(row);});
+    return;
+  }
   const set=new Set([...Object.keys(craMeta),...Object.keys(globalComments),...Object.keys(entries).map(k=>k.slice(0,7))]);
   const months=[...set].filter(k=>/^\d{4}-\d{2}$/.test(k)).sort().reverse();
   const years=[...new Set(months.map(k=>+k.slice(0,4)))];
@@ -533,6 +549,7 @@ async function loadHub(){
     profile.emailReferent=m.email_referent||"";
     if(m.intitule||m.client_nom){missions=[{name:m.client_nom||m.intitule,color:"#3b6ef5",start:m.date_debut||"",end:m.date_fin||"",ref:m.reference||"",missionId:m.id||""}];}
     meta().client=m.client_nom||"";
+    hubHisto=Array.isArray(data.historique)?data.historique:[];
     window.hubActive=true; save();
     const card=document.querySelector('.card');
     if(card){const b=document.createElement('div');b.className='hint';b.style.background='#e7f6f0';b.style.color='#1aa179';

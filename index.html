@@ -143,7 +143,7 @@
 
   <section class="card">
     <h3>Mes missions / clients</h3>
-    <div class="row">
+    <div class="row" id="addMissionRow">
       <label class="fld">Client / mission<input type="text" id="mName" placeholder="ex. Client Alpha"></label>
       <label class="fld">Début<input type="date" id="mStart"></label>
       <label class="fld">Fin<input type="date" id="mEnd"></label>
@@ -275,10 +275,12 @@ document.getElementById("cNum").oninput=e=>{meta().num=e.target.value;save();};
 
 /* ====== MISSIONS ====== */
 function renderMissions(){const wrap=document.getElementById("missionList");wrap.innerHTML="";const lock=isLocked();
+  const addRow=document.getElementById("addMissionRow");if(addRow)addRow.style.display=window.hubActive?"none":"";  // portail : missions auto depuis Freelanzy → pas d'ajout manuel
+  const canEdit=!lock&&!window.hubActive;                                                                          // ni suppression de la mission chargée
   missions.forEach((m,i)=>{const per=(m.start||m.end)?`${m.start?frDate(m.start):"…"} → ${m.end?frDate(m.end):"…"}`:"sans période";
     const el=document.createElement("div");el.className="mtag";
-    el.innerHTML=`<span class="dot" style="background:${m.color}"></span><span><strong>${m.name}</strong><br><span class="mperiod">${per}</span></span>${lock?"":'<button>×</button>'}`;
-    if(!lock)el.querySelector("button").onclick=()=>{missions.splice(i,1);save();renderMissions();render();};
+    el.innerHTML=`<span class="dot" style="background:${m.color}"></span><span><strong>${m.name}</strong><br><span class="mperiod">${per}</span></span>${canEdit?'<button>×</button>':""}`;
+    if(canEdit)el.querySelector("button").onclick=()=>{missions.splice(i,1);save();renderMissions();render();};
     wrap.appendChild(el);});}
 document.getElementById("addMission").onclick=()=>{const n=document.getElementById("mName").value.trim();if(!n)return;
   missions.push({name:n,color:palette[missions.length%palette.length],

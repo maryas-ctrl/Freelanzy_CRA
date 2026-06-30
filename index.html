@@ -82,7 +82,7 @@
   .valid input{margin-top:2px;width:18px;height:18px;flex:0 0 auto;cursor:pointer;}
   .lockbanner{display:none;align-items:center;gap:14px;background:var(--lock);border:1px solid #f1b0a8;
               color:var(--lock-ink);border-radius:10px;padding:14px 16px;font-size:14px;}
-  .histhead,.histrow{display:grid;grid-template-columns:1.6fr 1fr 1.2fr 1fr 1.4fr;gap:10px;align-items:center;font-size:13px;padding:8px 10px;}
+  .histhead,.histrow{display:grid;grid-template-columns:1.6fr 1fr 1.2fr 1.4fr;gap:10px;align-items:center;font-size:13px;padding:8px 10px;}
   .histhead{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
   .histrow{border:1px solid var(--line);border-radius:9px;margin-bottom:6px;}
   .hactions{display:flex;gap:6px;justify-content:flex-end;}
@@ -133,7 +133,7 @@
       <label class="fld">Prestataire<input type="text" id="pNom" placeholder="Nom Prénom"></label>
       <label class="fld">SIRET (opt.)<input type="text" id="pSiret" placeholder="000 000 000 00000"></label>
       <label class="fld">Email (opt.)<input type="email" id="pEmail" placeholder="email@exemple.fr"></label>
-      <label class="fld">TJM (€ HT)<input type="number" id="pTjm" min="0" step="10" placeholder="500"></label>
+      <label class="fld" style="display:none">TJM (€ HT)<input type="number" id="pTjm" min="0" step="10" placeholder="500"></label>
     </div>
     <div class="row" style="margin-top:10px;">
       <label class="fld">Client destinataire<input type="text" id="cClient" placeholder="Société cliente"></label>
@@ -170,7 +170,7 @@
       <div class="kpi"><span class="v" id="totDays">0</span><span class="l">jours facturables</span></div>
       <div class="kpi"><span class="v" id="totExc" style="color:#9b59b6">0</span><span class="l">jours exceptionnels</span></div>
       <div class="kpi"><span class="v" id="totAbs">0</span><span class="l">jours d'absence</span></div>
-      <div class="kpi"><span class="v eur" id="totMontant">—</span><span class="l">montant estimatif HT</span></div>
+      <div class="kpi" style="display:none"><span class="v eur" id="totMontant">—</span><span class="l">montant estimatif HT</span></div>
       <div class="bd" id="breakdown"></div>
     </div>
     <div class="coherence" id="coherence"></div>
@@ -202,7 +202,7 @@
 
   <section class="card">
     <h3>📚 Historique des CRA</h3>
-    <div class="histhead"><div>Mois</div><div>Statut</div><div>Activité</div><div>Montant HT</div><div></div></div>
+    <div class="histhead"><div>Mois</div><div>Statut</div><div>Activité</div><div></div></div>
     <div id="histList"></div>
   </section>
 
@@ -400,7 +400,7 @@ function craDocHTML(){
     <table class="ptable"><thead><tr><th>Date</th><th>Type</th><th>Période</th><th>Mission / Motif</th><th>Qté (j)</th></tr></thead><tbody>`;
   rows.forEach(r=>{html+=`<tr><td>${frDate(r.Date)}</td><td>${r.Type}</td><td>${r.Periode}</td><td>${r.Mission}</td><td>${num(r.Quantite)}</td></tr>`;});
   if(rows.length===0)html+=`<tr><td colspan="5" style="text-align:center;color:#999">Aucune saisie</td></tr>`;
-  html+=`</tbody></table><div class="ptot">Jours facturables : ${num(fact)}${exc>0?` &nbsp;|&nbsp; Exceptionnels : ${num(exc)}`:""} &nbsp;|&nbsp; Absences : ${num(abs)}${tjm>0?` &nbsp;|&nbsp; Montant estimatif HT : ${eur(fact*tjm)}`:""}</div>`;
+  html+=`</tbody></table><div class="ptot">Jours facturables : ${num(fact)}${exc>0?` &nbsp;|&nbsp; Exceptionnels : ${num(exc)}`:""} &nbsp;|&nbsp; Absences : ${num(abs)}</div>`;
   const gc=globalComments[mk]||"";html+=`<div style="font-size:13px;margin-top:14px;padding:8px 10px;border:1px solid #e2e6ee;border-radius:6px;background:#fafbfe;"><strong>Commentaire :</strong> ${gc||"—"}</div>`;
   html+=`<div class="psign"><span>Signature prestataire :</span><span>Signature client :</span></div>`;
   return html;
@@ -480,7 +480,6 @@ async function renderHistory(){
     row.innerHTML=`<div style="text-transform:capitalize"><strong>${lbl}</strong>${mk===monthKey()?'<span class="badge">en cours</span>':''}</div>
       <div>${statut}</div>
       <div>${num(t.fact)} j${t.exc?` · ${num(t.exc)} exc`:''}${t.abs?` · ${num(t.abs)} abs`:''}</div>
-      <div>${t.montant>0?eur(t.montant):'—'}</div>
       <div class="hactions"><button class="sm" data-o="${mk}">Ouvrir</button><button class="sm" data-d="${mk}">Dupliquer →</button></div>`;
     row.querySelector("[data-o]").onclick=()=>{const[yy,mm]=mk.split("-");current=new Date(+yy,+mm-1,1);render();renderMissions();window.scrollTo({top:0,behavior:"smooth"});};
     row.querySelector("[data-d]").onclick=()=>duplicateMonth(mk);

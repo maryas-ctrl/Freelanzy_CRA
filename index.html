@@ -530,7 +530,7 @@ async function loadHub(){
     if(f.tjm)profile.tjm=String(f.tjm);
     profile.freelanceId=f.id||""; profile.missionId=m.id||""; profile.clientId=m.client_id||"";
     profile.emailReferent=m.email_referent||"";
-    if(m.intitule||m.client_nom){missions=[{name:m.client_nom||m.intitule,color:"#3b6ef5",start:"",end:"",ref:m.reference||"",missionId:m.id||""}];}
+    if(m.intitule||m.client_nom){missions=[{name:m.client_nom||m.intitule,color:"#3b6ef5",start:m.date_debut||"",end:m.date_fin||"",ref:m.reference||"",missionId:m.id||""}];}
     meta().client=m.client_nom||"";
     window.hubActive=true; save();
     const card=document.querySelector('.card');
